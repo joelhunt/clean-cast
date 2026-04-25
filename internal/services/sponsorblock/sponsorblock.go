@@ -15,6 +15,34 @@ import (
 
 const SPONSORBLOCK_API_URL = "https://sponsor.ajay.app/api/skipSegments?videoID="
 
+// HasSegments returns true if SponsorBlock has any segments for the given video.
+// Results are cached: once segments are confirmed they are not rechecked; videos
+// with no segments are rechecked on each call until segments appear.
+func HasSegments(videoId string) bool {
+	cache := database.GetSponsorBlockCache(videoId)
+	if cache != nil && cache.HasSegments {
+		return true
+	}
+
+	endURL := SPONSORBLOCK_API_URL + videoId
+	if categories := getCategories(); categories != nil {
+		for _, category := range categories {
+			endURL += "&category=" + strings.TrimSpace(category)
+		}
+	}
+
+	resp, err := http.Get(endURL)
+	if err != nil {
+		log.Error("[SponsorBlock] Error checking for segments: ", err)
+		return false
+	}
+	defer resp.Body.Close()
+
+	hasSegments := resp.StatusCode == http.StatusOK
+	database.UpsertSponsorBlockCache(videoId, hasSegments)
+	return hasSegments
+}
+
 func DeterminePodcastDownload(youtubeVideoId string) (bool, float64) {
 	episodeHistory := database.GetEpisodePlaybackHistory(youtubeVideoId)
 

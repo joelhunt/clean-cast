@@ -40,6 +40,12 @@ type EpisodePlaybackHistory struct {
 	TotalTimeSkipped float64 `json:"total_time_skipped"`
 }
 
+type SponsorBlockCache struct {
+	YoutubeVideoId string `json:"youtube_video_id" gorm:"primary_key"`
+	HasSegments    bool   `json:"has_segments"`
+	CheckedAt      int64  `json:"checked_at"`
+}
+
 func NewPodcastEpisode(youtubeVideo *youtube.Video, duration time.Duration, podcastType enum.PodcastType, podcastId string) PodcastEpisode {
 	publishedAt, err := time.Parse("2006-01-02T15:04:05Z07:00", youtubeVideo.Snippet.PublishedAt)
 	if err != nil {

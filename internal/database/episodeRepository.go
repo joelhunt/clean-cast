@@ -6,6 +6,7 @@ import (
 	"ikoyhn/podcast-sponsorblock/internal/models"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -129,6 +130,46 @@ func DeletePodcastCronJob() {
 		}
 
 		log.Info("[DB] Deleted old episode playback history... " + history.YoutubeVideoId)
+	}
+}
+
+var audioExtensions = map[string]bool{
+	".m4a": true, ".aac": true, ".opus": true,
+	".webm": true, ".mp3": true, ".ogg": true, ".mp4": true,
+}
+
+func CleanupAudioFilesByAge() {
+	retentionDays := config.AppConfig.Setup.AudioRetentionDays
+	if retentionDays <= 0 {
+		return
+	}
+	cutoff := time.Now().AddDate(0, 0, -retentionDays)
+
+	entries, err := os.ReadDir(config.AppConfig.Setup.AudioDir)
+	if err != nil {
+		log.Error("[Cleanup] Failed to read audio dir: " + err.Error())
+		return
+	}
+
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		if !audioExtensions[strings.ToLower(filepath.Ext(entry.Name()))] {
+			continue
+		}
+		info, err := entry.Info()
+		if err != nil {
+			continue
+		}
+		if info.ModTime().Before(cutoff) {
+			filePath := path.Join(config.AppConfig.Setup.AudioDir, entry.Name())
+			if err := os.Remove(filePath); err != nil {
+				log.Warn("[Cleanup] Failed to delete " + filePath + ": " + err.Error())
+			} else {
+				log.Info("[Cleanup] Deleted old audio file: " + entry.Name())
+			}
+		}
 	}
 }
 

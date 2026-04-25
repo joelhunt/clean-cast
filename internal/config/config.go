@@ -19,6 +19,8 @@ type Config struct {
 		ConfigDir              string `mapstructure:"config-dir" validate:"required"`
 		DbFile                 string
 		PodcastRefreshInterval string `mapstructure:"podcast-refresh-interval"`
+		SponsorBlockWaitHours  int    `mapstructure:"sponsorblock-wait-hours"`
+		AudioRetentionDays     int    `mapstructure:"audio-retention-days"`
 	} `mapstructure:"setup"`
 
 	Ntfy struct {
@@ -75,6 +77,8 @@ func Load() (*Config, error) {
 	v.SetDefault("setup.config-dir", configDir)
 	v.SetDefault("setup.audio-dir", "audio")
 	v.SetDefault("ytdlp.sponsorblock-categories", "sponsor")
+	v.SetDefault("setup.sponsorblock-wait-hours", 8)
+	v.SetDefault("setup.audio-retention-days", 7)
 	v.SetDefault("setup.google-api-key", os.Getenv("GOOGLE_API_KEY"))
 	if os.Getenv("PODCAST_REFRESH_INTERVAL") != "" {
 		v.SetDefault("setup.podcast-refresh-interval", os.Getenv("PODCAST_REFRESH_INTERVAL"))
@@ -99,6 +103,8 @@ func Load() (*Config, error) {
 	v.BindEnv("ytdlp.episode-duration-minimum", "MIN_DURATION")
 	v.BindEnv("ytdlp.sponsorblock-categories", "SPONSORBLOCK_CATEGORIES")
 	v.BindEnv("ytdlp.ytdlp-extractor-args", "YTDLP_EXTRACTOR_ARGS")
+	v.BindEnv("setup.sponsorblock-wait-hours", "SPONSORBLOCK_WAIT_HOURS")
+	v.BindEnv("setup.audio-retention-days", "AUDIO_RETENTION_DAYS")
 
 	var cfg Config
 	if err := v.Unmarshal(&cfg); err != nil {

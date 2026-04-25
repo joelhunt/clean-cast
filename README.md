@@ -121,6 +121,26 @@ Below is a guide to get the application running
 
 4. Restart application after making any changes to `properties.yml`.
 
+### Environment Variables
+
+| Variable | Default | Description |
+|---|---|---|
+| `GOOGLE_API_KEY` | *(required)* | YouTube Data API v3 key |
+| `CONFIG_DIR` | `/config` | Directory for database, audio files, and config |
+| `TOKEN` | — | Optional auth token required as `?token=` query param |
+| `PORT` | `8082` | HTTP port to listen on |
+| `HOST` | — | Host/IP to bind to |
+| `SPONSORBLOCK_WAIT_HOURS` | `8` | Hours to wait before including a new episode with no SponsorBlock segments. Set to `0` to disable filtering. |
+| `AUDIO_RETENTION_DAYS` | `7` | Delete audio files older than this many days. Cleanup runs daily at midnight. Set to `0` to disable. |
+| `SPONSORBLOCK_CATEGORIES` | `sponsor` | Comma-separated SponsorBlock categories to remove (e.g. `sponsor,selfpromo,intro`) |
+| `MIN_DURATION` | `3m` | Minimum episode duration to include in feeds |
+| `PODCAST_REFRESH_INTERVAL` | `1h` | How often to re-fetch YouTube metadata |
+| `CRON` | `0 0 * * 0` | Cron schedule for the playback-history cleanup job |
+| `COOKIES_FILE` | — | Path (relative to `CONFIG_DIR`) to a yt-dlp cookies file |
+| `NTFY_SERVER` | — | NTFY server URL for download notifications |
+| `NTFY_TOPIC` | — | NTFY topic for download notifications |
+| `TRUSTED_HOSTS` | — | Comma-separated list of allowed `Host` header values |
+
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
@@ -141,8 +161,11 @@ Below is a guide to get the application running
 
 *  **NOTE:** If you have the docker var `-e TOKEN=<secure token>` set you must add the token as a query param to this url. Ex: `http://localhost:8080/rss/PLbh0Jamvptwfp_qc439PLuyKJ-tWUt222?token=secureToken`
 
-
 3. With this URL you can now add this to any of your favorite podcast apps that accept custom RSS feeds (Apple Podcasts app, VLC Media Player, etc)
+
+### Web UI
+
+A simple URL generator is available at the root path (`http://localhost:8080/`). Enter a playlist or channel ID and it will display the RSS feed URL ready to copy into your podcast app. If `TOKEN` is configured it is automatically included in the generated URL.
 
 
 
