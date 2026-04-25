@@ -1,18 +1,8 @@
 package app
 
-import (
-	"fmt"
-	"ikoyhn/podcast-sponsorblock/internal/config"
-	"net/url"
-)
+import "fmt"
 
 func buildWebUI(baseURL string) string {
-	token := config.AppConfig.Authentication.Token
-	tokenJS := "null"
-	if token != "" {
-		tokenJS = fmt.Sprintf("%q", url.QueryEscape(token))
-	}
-
 	return fmt.Sprintf(`<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -33,12 +23,13 @@ func buildWebUI(baseURL string) string {
   h1 { font-size: 1.75rem; font-weight: 700; color: #f8fafc; margin-bottom: .25rem; }
   .subtitle { color: #94a3b8; font-size: .9rem; margin-bottom: 2rem; }
   label { display: block; font-size: .85rem; font-weight: 500; color: #cbd5e1; margin-bottom: .5rem; }
-  input[type=text] {
+  .field { margin-bottom: 1.25rem; }
+  input[type=text], input[type=password] {
     width: 100%%; padding: .75rem 1rem; border-radius: .5rem;
     border: 1px solid #334155; background: #0f172a; color: #f1f5f9;
     font-size: 1rem; outline: none; transition: border-color .2s;
   }
-  input[type=text]:focus { border-color: #6366f1; }
+  input[type=text]:focus, input[type=password]:focus { border-color: #6366f1; }
   .hint { font-size: .78rem; color: #64748b; margin-top: .4rem; }
   .type-row { display: flex; gap: .75rem; margin: 1rem 0; }
   .type-btn {
@@ -69,9 +60,16 @@ func buildWebUI(baseURL string) string {
   <h1>CleanCast</h1>
   <p class="subtitle">Generate your podcast RSS feed URL</p>
 
-  <label for="feedId">YouTube Playlist or Channel ID</label>
-  <input type="text" id="feedId" placeholder="PLxxx… or UCxxx…" autocomplete="off" spellcheck="false">
-  <p class="hint">Paste a playlist ID (starts with PL) or a channel ID (starts with UC)</p>
+  <div class="field">
+    <label for="feedId">YouTube Playlist or Channel ID</label>
+    <input type="text" id="feedId" placeholder="PLxxx… or UCxxx…" autocomplete="off" spellcheck="false">
+    <p class="hint">Paste a playlist ID (starts with PL) or a channel ID (starts with UC)</p>
+  </div>
+
+  <div class="field">
+    <label for="token">Token <span style="color:#64748b;font-weight:400">(leave blank if not configured)</span></label>
+    <input type="password" id="token" placeholder="Your TOKEN value" autocomplete="off">
+  </div>
 
   <div class="type-row">
     <button class="type-btn active" id="btn-auto" onclick="setType('auto')">Auto-detect</button>
@@ -90,7 +88,6 @@ func buildWebUI(baseURL string) string {
 
 <script>
   const BASE_URL = %q;
-  const TOKEN = %s;
   let forceType = 'auto';
 
   function setType(t) {
@@ -113,23 +110,15 @@ func buildWebUI(baseURL string) string {
     if (!id) { result.style.display = 'none'; return; }
     const endpoint = detectEndpoint(id);
     let u = BASE_URL + '/' + endpoint + '/' + encodeURIComponent(id);
-    if (TOKEN) u += '?token=' + TOKEN;
+    const token = document.getElementById('token').value.trim();
+    if (token) u += '?token=' + encodeURIComponent(token);
     document.getElementById('feedUrl').textContent = u;
     result.style.display = 'block';
   }
 
-  function copyUrl() {
-    const text = document.getElementById('feedUrl').textContent;
-    navigator.clipboard.writeText(text).then(function() {
-      const btn = document.getElementById('copyBtn');
-      btn.textContent = 'Copied!';
-      btn.classList.add('copied');
-      setTimeout(function() { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1500);
-    });
-  }
-
   document.getElementById('feedId').addEventListener('input', updateUrl);
+  document.getElementById('token').addEventListener('input', updateUrl);
 </script>
 </body>
-</html>`, baseURL, tokenJS)
+</html>`, baseURL)
 }
