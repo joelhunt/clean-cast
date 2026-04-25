@@ -49,4 +49,8 @@ func SetupDatabase() {
 	if err != nil {
 		panic(err)
 	}
+	err = db.AutoMigrate(&models.SponsorBlockCache{})
+	if err != nil {
+		panic(err)
+	}
 }

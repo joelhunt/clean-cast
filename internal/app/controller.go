@@ -22,6 +22,10 @@ import (
 )
 
 func registerRoutes(e *echo.Echo) {
+	e.GET("/", func(c echo.Context) error {
+		return c.HTML(http.StatusOK, buildWebUI(handler(c.Request())))
+	})
+
 	e.GET("/channel/:channelId", func(c echo.Context) error {
 		if err := checkAuthentication(c); err != nil {
 			return err
@@ -147,6 +151,9 @@ func setupCron() {
 	c := cron.New()
 	c.AddFunc(cronSchedule, func() {
 		database.DeletePodcastCronJob()
+	})
+	c.AddFunc("0 0 * * *", func() {
+		database.CleanupAudioFilesByAge()
 	})
 	c.Start()
 }

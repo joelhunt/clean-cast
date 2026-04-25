@@ -7,6 +7,7 @@ import (
 	"ikoyhn/podcast-sponsorblock/internal/enum"
 	"ikoyhn/podcast-sponsorblock/internal/models"
 	"ikoyhn/podcast-sponsorblock/internal/services/generator"
+	"ikoyhn/podcast-sponsorblock/internal/services/sponsorblock"
 	"net/url"
 	"path/filepath"
 	"strings"
@@ -83,8 +84,34 @@ func GenerateRssFeed(podcast models.Podcast, host string, podcastType enum.Podca
 }
 
 func BuildPodcast(podcast models.Podcast, allItems []models.PodcastEpisode) models.Podcast {
-	podcast.PodcastEpisodes = allItems
+	podcast.PodcastEpisodes = filterBySponsorBlock(allItems)
 	return podcast
+}
+
+// filterBySponsorBlock excludes episodes that are newer than SPONSORBLOCK_WAIT_HOURS
+// and have no SponsorBlock segments yet. Once an episode has confirmed segments it is
+// cached and never rechecked. Episodes with no segments are rechecked each refresh
+// until either segments appear or the grace period expires.
+func filterBySponsorBlock(episodes []models.PodcastEpisode) []models.PodcastEpisode {
+	waitHours := config.AppConfig.Setup.SponsorBlockWaitHours
+	if waitHours <= 0 {
+		return episodes
+	}
+
+	filtered := make([]models.PodcastEpisode, 0, len(episodes))
+	for _, ep := range episodes {
+		ageHours := time.Since(ep.PublishedDate).Hours()
+		if ageHours >= float64(waitHours) {
+			filtered = append(filtered, ep)
+			continue
+		}
+		if sponsorblock.HasSegments(ep.YoutubeVideoId) {
+			filtered = append(filtered, ep)
+		} else {
+			log.Debugf("[SponsorBlock] Filtering episode %s (age %.1fh, no segments yet)", ep.YoutubeVideoId, ageHours)
+		}
+	}
+	return filtered
 }
 
 func transformArtworkURL(artworkURL string, newHeight int, newWidth int) string {
