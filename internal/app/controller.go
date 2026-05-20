@@ -23,6 +23,9 @@ import (
 
 func registerRoutes(e *echo.Echo) {
 	e.GET("/", func(c echo.Context) error {
+		if err := checkAuthentication(c); err != nil {
+			return err
+		}
 		return c.HTML(http.StatusOK, buildWebUI(handler(c.Request())))
 	})
 
