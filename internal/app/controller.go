@@ -218,6 +218,7 @@ func checkAuthentication(c echo.Context) error {
 			return nil
 		}
 
+		c.Response().Header().Set("WWW-Authenticate", `Basic realm="CleanCast"`)
 		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
 	}
 
@@ -226,6 +227,7 @@ func checkAuthentication(c echo.Context) error {
 		if ok && pass == config.AppConfig.Authentication.BasicAuth.Password {
 			return nil
 		}
+		c.Response().Header().Set("WWW-Authenticate", `Basic realm="CleanCast"`)
 		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
 	}
 
