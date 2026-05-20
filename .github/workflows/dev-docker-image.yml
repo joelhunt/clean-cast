@@ -2,6 +2,8 @@ name: Docker Image Dev CI
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
 
 permissions:
   packages: write
