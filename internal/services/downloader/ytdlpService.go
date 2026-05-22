@@ -66,9 +66,6 @@ func GetYoutubeVideo(youtubeVideoId string) <-chan struct{} {
 	if config.AppConfig.Ytdlp.YtdlpExtractorArgs != "" {
 		dl.ExtractorArgs(config.AppConfig.Ytdlp.YtdlpExtractorArgs)
 	}
-	if config.AppConfig.Ytdlp.RemoveChaptersPattern != "" {
-		dl.RemoveChapters(config.AppConfig.Ytdlp.RemoveChaptersPattern)
-	}
 
 	done := make(chan struct{})
 	go func() {
