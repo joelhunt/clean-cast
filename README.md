@@ -136,7 +136,6 @@ Below is a guide to get the application running
 | `MIN_DURATION` | `3m` | Minimum episode duration to include in feeds |
 | `PODCAST_REFRESH_INTERVAL` | `1h` | How often to re-fetch YouTube metadata |
 | `CRON` | `0 0 * * 0` | Cron schedule for the playback-history cleanup job |
-| `REMOVE_CHAPTERS_PATTERN` | — | Regex to remove chapters by title (e.g. `(?i)^AD[\s\-–]` removes chapters starting with "AD - "). Disabled when empty. |
 | `COOKIES_FILE` | — | Path (relative to `CONFIG_DIR`) to a yt-dlp cookies file |
 | `NTFY_SERVER` | — | NTFY server URL for download notifications |
 | `NTFY_TOPIC` | — | NTFY topic for download notifications |
