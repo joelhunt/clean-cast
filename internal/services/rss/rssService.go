@@ -108,7 +108,7 @@ func filterBySponsorBlock(episodes []models.PodcastEpisode) []models.PodcastEpis
 		if sponsorblock.HasSegments(ep.YoutubeVideoId) {
 			filtered = append(filtered, ep)
 		} else {
-			log.Debugf("[SponsorBlock] Filtering episode %s (age %.1fh, no segments yet)", ep.YoutubeVideoId, ageHours)
+			log.Infof("[SponsorBlock] Skipping episode %s (%s, age %.1fh) — no segments yet, waiting for %.0fh grace period", ep.YoutubeVideoId, ep.EpisodeName, ageHours, float64(waitHours))
 		}
 	}
 	return filtered
