@@ -44,10 +44,11 @@ type Config struct {
 	} `mapstructure:"authentication"`
 
 	Ytdlp struct {
-		CookiesFile            string `mapstructure:"cookies-file"`
-		SponsorBlockCategories string `mapstructure:"sponsorblock-categories"`
-		EpisodeDurationMinimum string `mapstructure:"episode-duration-minimum"`
-		YtdlpExtractorArgs     string `mapstructure:"ytdlp-extractor-args"`
+		CookiesFile              string `mapstructure:"cookies-file"`
+		SponsorBlockCategories   string `mapstructure:"sponsorblock-categories"`
+		EpisodeDurationMinimum   string `mapstructure:"episode-duration-minimum"`
+		YtdlpExtractorArgs       string `mapstructure:"ytdlp-extractor-args"`
+		RemoveChaptersPattern    string `mapstructure:"remove-chapters-pattern"`
 	} `mapstructure:"ytdlp"`
 }
 
@@ -103,6 +104,7 @@ func Load() (*Config, error) {
 	v.BindEnv("ytdlp.episode-duration-minimum", "MIN_DURATION")
 	v.BindEnv("ytdlp.sponsorblock-categories", "SPONSORBLOCK_CATEGORIES")
 	v.BindEnv("ytdlp.ytdlp-extractor-args", "YTDLP_EXTRACTOR_ARGS")
+	v.BindEnv("ytdlp.remove-chapters-pattern", "REMOVE_CHAPTERS_PATTERN")
 	v.BindEnv("setup.sponsorblock-wait-hours", "SPONSORBLOCK_WAIT_HOURS")
 	v.BindEnv("setup.audio-retention-days", "AUDIO_RETENTION_DAYS")
 
