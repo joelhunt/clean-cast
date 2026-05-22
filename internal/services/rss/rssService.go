@@ -10,6 +10,7 @@ import (
 	"ikoyhn/podcast-sponsorblock/internal/services/sponsorblock"
 	"net/url"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -88,14 +89,30 @@ func BuildPodcast(podcast models.Podcast, allItems []models.PodcastEpisode) mode
 	return podcast
 }
 
+// chapterPattern is the regex for a YouTube chapter timestamp line, e.g. "32:36 AD - Shopify".
+var chapterPattern = regexp.MustCompile(`(?m)^\d+:\d{2}(?::\d{2})?\s+(.+)$`)
+
 // filterBySponsorBlock excludes episodes that are newer than SPONSORBLOCK_WAIT_HOURS
 // and have no SponsorBlock segments yet. Once an episode has confirmed segments it is
 // cached and never rechecked. Episodes with no segments are rechecked each refresh
 // until either segments appear or the grace period expires.
+//
+// If REMOVE_CHAPTERS_PATTERN is set and the episode description contains a chapter
+// whose title matches that pattern, the episode is included regardless of SponsorBlock
+// — the podcast self-tags its ads via chapters so no SponsorBlock wait is needed.
 func filterBySponsorBlock(episodes []models.PodcastEpisode) []models.PodcastEpisode {
 	waitHours := config.AppConfig.Setup.SponsorBlockWaitHours
 	if waitHours <= 0 {
 		return episodes
+	}
+
+	var chaptersRe *regexp.Regexp
+	if p := strings.TrimSpace(config.AppConfig.Ytdlp.RemoveChaptersPattern); p != "" {
+		var err error
+		chaptersRe, err = regexp.Compile(p)
+		if err != nil {
+			log.Warnf("[SponsorBlock] Invalid REMOVE_CHAPTERS_PATTERN %q: %v", p, err)
+		}
 	}
 
 	filtered := make([]models.PodcastEpisode, 0, len(episodes))
@@ -107,11 +124,27 @@ func filterBySponsorBlock(episodes []models.PodcastEpisode) []models.PodcastEpis
 		}
 		if sponsorblock.HasSegments(ep.YoutubeVideoId) {
 			filtered = append(filtered, ep)
-		} else {
-			log.Infof("[SponsorBlock] Skipping episode %s (%s, age %.1fh) — no segments yet, waiting for %.0fh grace period", ep.YoutubeVideoId, ep.EpisodeName, ageHours, float64(waitHours))
+			continue
 		}
+		if chaptersRe != nil && hasMatchingChapter(ep.EpisodeDescription, chaptersRe) {
+			log.Infof("[SponsorBlock] Including episode %s (%s) — no SponsorBlock segments but has matching ad chapters", ep.YoutubeVideoId, ep.EpisodeName)
+			filtered = append(filtered, ep)
+			continue
+		}
+		log.Infof("[SponsorBlock] Skipping episode %s (%s, age %.1fh) — no segments yet, waiting for %.0fh grace period", ep.YoutubeVideoId, ep.EpisodeName, ageHours, float64(waitHours))
 	}
 	return filtered
+}
+
+// hasMatchingChapter returns true if any YouTube chapter title in the description
+// matches the given compiled regex.
+func hasMatchingChapter(description string, re *regexp.Regexp) bool {
+	for _, match := range chapterPattern.FindAllStringSubmatch(description, -1) {
+		if re.MatchString(match[1]) {
+			return true
+		}
+	}
+	return false
 }
 
 func transformArtworkURL(artworkURL string, newHeight int, newWidth int) string {
