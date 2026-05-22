@@ -89,8 +89,11 @@ func BuildPodcast(podcast models.Podcast, allItems []models.PodcastEpisode) mode
 	return podcast
 }
 
-// chapterPattern is the regex for a YouTube chapter timestamp line, e.g. "32:36 AD - Shopify".
-var chapterPattern = regexp.MustCompile(`(?m)^\d+:\d{2}(?::\d{2})?\s+(.+)$`)
+// chapterPattern matches a YouTube chapter timestamp line in either format:
+//   "32:36 AD - Shopify"      (space-separated)
+//   "32:30 - AD - Shopify"    (dash-separated, as used by some podcasts)
+// The captured group is the chapter title only, with the separator stripped.
+var chapterPattern = regexp.MustCompile(`(?m)^\d+:\d{2}(?::\d{2})?\s+(?:-\s+)?(.+)$`)
 
 // filterBySponsorBlock excludes episodes that are newer than SPONSORBLOCK_WAIT_HOURS
 // and have no SponsorBlock segments yet. Once an episode has confirmed segments it is
